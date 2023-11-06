@@ -40,7 +40,7 @@ fi
 
 # assumes the repo is already cloned as a prerequisite for running the script
 
-# fetch first to be able to detect if branch already exists 
+# fetch first to be able to detect if branch already exists
 git fetch
 
 branch_exists=$(git branch --list $branch_name)
@@ -53,7 +53,7 @@ else
     echo "Branch name $branch_name already exists"
 
     # check out existing branch
-    echo "Check out branch instead" 
+    echo "Check out branch instead"
     git checkout $branch_name
     git pull
 
@@ -65,7 +65,9 @@ fi
 echo "Running update command $update_command"
 eval $update_command
 
-if [ -n "git diff" ]
+updates_detected=$(git diff)
+
+if [ -n "$updates_detected" ]
 then
     echo "Updates detected"
 
@@ -76,7 +78,7 @@ then
     # format: https://[username]:[token]@github.com/[organization]/[repo].git
     git remote add authenticated "https://$username:$token@github.com/$repo.git"
 
-    # execute command to run when changes are deteced, if provided
+    # execute command to run when changes are detected, if provided
     on_changes_command_value=${on_changes_command%?}
     echo $on_changes_command_value
     if [ -n "$on_changes_command_value" ]; then
@@ -89,7 +91,7 @@ then
 
     # commit the changes to updated files
     git commit -a -m ":arrow_up: Auto-updated dependencies on $job_date" --signoff
-    
+
     # push the changes
     git push authenticated -f
 
@@ -102,8 +104,8 @@ then
     response=$(curl --write-out "%{message}\n" -X POST -H "Content-Type: application/json" -H "Authorization: token $token" \
          --data '{"title":"'"$title"'","head": "'"$branch_name"'","base":"'"$pr_branch"'", "body":"'"$pr_message"'"}' \
          "https://api.github.com/repos/$repo/pulls")
-    
-    echo $response   
+
+    echo $response
 
     if [[ "$response" == *"already exist"* ]]; then
         echo "Pull request already opened. Updates were pushed to the existing PR instead"
